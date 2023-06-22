@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 
 const TURNS = {
@@ -17,8 +17,45 @@ const COMBOS_WINNER = [
   [2,4,6]
 ]
 
+const isWinner = (board) => {
+  let winner = false;
+  let winnerX = false;
+  for (let i = 0; i < COMBOS_WINNER.length; i++){
+    const combo = COMBOS_WINNER[i];
+    if(winner) break
+    let counterX = 0;
+    let counterY = 0;
+    for (let j = 0; j < combo.length; j++){
+      const index = combo[j];
+      
+      if (board[index] === TURNS.x) {
+        counterX++
+        if (counterX === 3) {
+          winner = true;
+          winnerX = true;
+          break
+        }
+      }
+
+      if (board[index] === TURNS.o) {
+        counterY++
+        if (counterY === 3) {
+          winner = true;
+          break
+        }
+      }
+    }
+  }
+
+  if (!winner) return null
+
+  if (!winnerX) return false
+  
+  return true
+}
 
 const Square = ({ children, isSelected, updateBoard, i }) => {
+
   const className = `square ${isSelected ? 'is-selected' : ''}`;
 
   const handleClick = () => {
@@ -43,6 +80,8 @@ function App() {
 
   const updateBoard = (i) => {
     
+    if(typeof winner === 'boolean') return
+
     if(useBoard[i]) return
     //EVITAR SOBREESCRIBIR
 
@@ -54,6 +93,17 @@ function App() {
     setTurn(newTurn);
     
   }
+
+  const playAgain = () => {
+    setTurn(TURNS.x);
+    setWinner(null);
+    setUseBoard(board);
+  }
+
+  useEffect(() => {
+    const winner = isWinner(useBoard);
+    setWinner(winner);
+  },[useBoard])
 
   return (
     <>
@@ -67,6 +117,7 @@ function App() {
                   key={i}
                   i={i}
                   updateBoard={updateBoard}
+                  winner={winner}
                 >
                   {useBoard[i]}
                 </Square>
@@ -78,6 +129,16 @@ function App() {
         <section className="turn">
           <Square isSelected={turn === 'X'}>{ TURNS.x }</Square>
           <Square isSelected={turn === 'O'}>{ TURNS.o }</Square>
+        </section>
+
+        <section className={typeof winner === 'boolean' ? 'winner' : ''}>
+          {
+            winner === null
+              ? ''
+              : winner === true
+                ? <h2 className="win"><p className="text" onClick={playAgain}>GANA X</p></h2>
+                : <h2 className="win"><p className="text" onClick={playAgain}>GANA O</p></h2>
+          }
         </section>
       </main>
     </>
